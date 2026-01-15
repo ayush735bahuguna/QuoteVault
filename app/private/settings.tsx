@@ -1,23 +1,60 @@
 import { Colors, Strings, Themes } from '@/src/constants';
 import { useAuth, useSettings } from '@/src/context';
+import { ThemedView } from '@/src/components/ThemedView'; // Add import
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import Slider from '@react-native-community/slider';
-import React from 'react';
-import { Alert, Image, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Image,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+  Platform,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
-  const { settings, isDark, setThemeMode, setThemeName, setFontSize, setNotificationsEnabled } =
-    useSettings();
+  const {
+    settings,
+    isDark,
+    colors,
+    setThemeMode,
+    setThemeName,
+    setFontSize,
+    setNotificationsEnabled,
+    setNotificationTime,
+  } = useSettings();
+
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Log Out', style: 'destructive', onPress: signOut },
     ]);
+  };
+
+  const onTimeChange = (event: any, selectedDate?: Date) => {
+    setShowTimePicker(false);
+    if (selectedDate) {
+      const hours = selectedDate.getHours().toString().padStart(2, '0');
+      const minutes = selectedDate.getMinutes().toString().padStart(2, '0');
+      setNotificationTime(`${hours}:${minutes}`);
+    }
+  };
+
+  const getTimeDate = () => {
+    const [hours, minutes] = (settings.notificationTime || '09:00').split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    return date;
   };
 
   const themeOptions = [
@@ -31,7 +68,7 @@ export default function SettingsScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-background-light dark:bg-background-dark">
+    <ThemedView className="flex-1 bg-background-light dark:bg-background-dark">
       <ScrollView
         className="flex-1 px-4 py-6"
         showsVerticalScrollIndicator={false}
@@ -47,13 +84,17 @@ export default function SettingsScreen() {
                   className="h-20 w-20 rounded-full border-2 border-orange-50 shadow-md"
                 />
               ) : (
-                <View className="h-20 w-20 items-center justify-center rounded-full bg-primary shadow-md">
+                <View
+                  className="h-20 w-20 items-center justify-center rounded-full shadow-md"
+                  style={{ backgroundColor: colors.primary.DEFAULT }}>
                   <Text className="text-2xl font-bold text-white">
                     {user?.profile?.username?.charAt(0).toUpperCase() || 'U'}
                   </Text>
                 </View>
               )}
-              <View className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-primary">
+              <View
+                className="absolute bottom-0 right-0 h-6 w-6 items-center justify-center rounded-full border-2 border-white"
+                style={{ backgroundColor: colors.primary.DEFAULT }}>
                 <MaterialIcons name="check" size={14} color="#FFF" />
               </View>
             </View>
@@ -67,10 +108,10 @@ export default function SettingsScreen() {
               <TouchableOpacity
                 className="flex-row items-center gap-1"
                 onPress={() => router.push('/private/profile/edit')}>
-                <Text className="text-sm font-medium text-primary">
+                <Text className="text-sm font-medium" style={{ color: colors.primary.DEFAULT }}>
                   {Strings.settings.editProfile}
                 </Text>
-                <MaterialIcons name="arrow-forward" size={16} color={Colors.primary.DEFAULT} />
+                <MaterialIcons name="arrow-forward" size={16} color={colors.primary.DEFAULT} />
               </TouchableOpacity>
             </View>
           </View>
@@ -99,12 +140,11 @@ export default function SettingsScreen() {
               <Switch
                 value={settings.themeMode === 'dark'}
                 onValueChange={(value) => setThemeMode(value ? 'dark' : 'light')}
-                trackColor={{ false: '#E7E5E4', true: Colors.primary.DEFAULT }}
+                trackColor={{ false: '#E7E5E4', true: colors.primary.DEFAULT }}
                 thumbColor="#FFFFFF"
               />
             </View>
 
-            {/* Daily Quote */}
             <View className="flex-row items-center justify-between border-b border-border-light/50 p-4 dark:border-white/5">
               <View className="flex-row items-center gap-3">
                 <View className="h-9 w-9 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
@@ -117,43 +157,52 @@ export default function SettingsScreen() {
               <Switch
                 value={settings.notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: '#E7E5E4', true: Colors.primary.DEFAULT }}
+                trackColor={{ false: '#E7E5E4', true: colors.primary.DEFAULT }}
                 thumbColor="#FFFFFF"
               />
             </View>
 
-            {/* Notification Time */}
-            <TouchableOpacity className="flex-row items-center justify-between p-4">
+            <TouchableOpacity
+              className="flex-row items-center justify-between p-4"
+              onPress={() => setShowTimePicker(true)}>
               <View className="flex-row items-center gap-3">
                 <View className="h-9 w-9 items-center justify-center rounded-full bg-primary/10 dark:bg-primary/20">
-                  <MaterialIcons name="schedule" size={20} color={Colors.primary.DEFAULT} />
+                  <MaterialIcons name="schedule" size={20} color={colors.primary.DEFAULT} />
                 </View>
                 <Text className="text-base font-medium text-text-primary-light dark:text-text-primary-dark">
                   {Strings.settings.notificationTime}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2 rounded-lg bg-stone-100 px-3 py-1 dark:bg-white/5">
-                <Text className="text-sm font-semibold text-primary">
-                  {settings.notificationTime || '08:00'} AM
+                <Text className="text-sm font-semibold" style={{ color: colors.primary.DEFAULT }}>
+                  {settings.notificationTime || '08:00'}
                 </Text>
               </View>
             </TouchableOpacity>
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={getTimeDate()}
+                mode="time"
+                is24Hour={true}
+                display="default"
+                onChange={onTimeChange}
+              />
+            )}
           </View>
         </View>
 
-        {/* Appearance Section */}
         <View className="mb-6">
           <Text className="mb-3 px-2 text-xs font-bold uppercase tracking-widest text-text-secondary-light opacity-80 dark:text-text-secondary-dark">
             {Strings.settings.appearance}
           </Text>
           <View className="rounded-xl border border-border-light/50 bg-surface-light p-5 shadow-soft dark:border-white/5 dark:bg-surface-dark">
-            {/* Theme Selection */}
             <View className="mb-6">
               <View className="mb-3 flex-row items-center justify-between">
                 <Text className="text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
                   {Strings.settings.theme}
                 </Text>
-                <Text className="text-xs font-bold text-primary">
+                <Text className="text-xs font-bold" style={{ color: colors.primary.DEFAULT }}>
                   {Themes[settings.themeName]?.name || 'Golden Hour'}
                 </Text>
               </View>
@@ -163,12 +212,12 @@ export default function SettingsScreen() {
                     key={theme.key}
                     onPress={() => setThemeName(theme.key as any)}
                     className={`h-16 flex-1 overflow-hidden rounded-xl ${
-                      settings.themeName === theme.key ? 'ring-2 ring-primary ring-offset-2' : ''
+                      settings.themeName === theme.key ? 'ring-2 ring-offset-2' : ''
                     }`}
                     style={{
                       backgroundColor: theme.gradient[0],
-                      borderWidth: settings.themeName === theme.key ? 2 : 0,
-                      borderColor: Colors.primary.DEFAULT,
+                      borderColor:
+                        settings.themeName === theme.key ? colors.primary.DEFAULT : 'transparent',
                     }}>
                     {settings.themeName === theme.key && (
                       <View className="absolute inset-0 items-center justify-center">
@@ -213,9 +262,9 @@ export default function SettingsScreen() {
                       else if (value === 1) setFontSize('medium');
                       else setFontSize('large');
                     }}
-                    minimumTrackTintColor={Colors.primary.DEFAULT}
+                    minimumTrackTintColor={colors.primary.DEFAULT}
                     maximumTrackTintColor={isDark ? Colors.border.dark : Colors.border.light}
-                    thumbTintColor={Colors.primary.DEFAULT}
+                    thumbTintColor={colors.primary.DEFAULT}
                   />
                   <Text className="text-xl font-bold text-text-primary-light dark:text-text-primary-dark">
                     Tt
@@ -239,6 +288,6 @@ export default function SettingsScreen() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </ThemedView>
   );
 }

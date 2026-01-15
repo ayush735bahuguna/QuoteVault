@@ -10,6 +10,7 @@ export default function TabsLayout() {
   const activeColor = Colors.primary.DEFAULT;
   const inactiveColor = isDark ? Colors.text.secondary.dark : Colors.text.secondary.light;
   const bgColor = isDark ? Colors.background.dark : Colors.background.light;
+  const tabBgColor = isDark ? Colors.background.dark : '#FFFFFF'; // White for light mode
   const borderColor = isDark ? Colors.border.dark : Colors.border.light;
 
   const insets = useSafeAreaInsets();
@@ -23,6 +24,8 @@ export default function TabsLayout() {
           paddingTop: 10,
           height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
+          backgroundColor: tabBgColor,
+          borderTopColor: borderColor,
         },
         tabBarLabelStyle: {
           fontSize: 10,

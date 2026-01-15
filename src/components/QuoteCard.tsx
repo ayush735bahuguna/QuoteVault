@@ -19,7 +19,8 @@ export function QuoteCard({
   isFavorited: boolean;
   onAddToCollection?: () => void;
 }) {
-  const { isDark } = useSettings();
+  const { isDark, getFontSizeValue, colors } = useSettings();
+  const fontSize = getFontSizeValue();
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(`"${quote.content}" — ${quote.author}`);
@@ -33,7 +34,10 @@ export function QuoteCard({
       {/* Category Badge */}
       <View className="mb-4 flex-row items-start justify-between">
         <View className="flex-row items-center">
-          <View className="mr-2 h-1.5 w-1.5 rounded-full bg-primary" />
+          <View
+            className="mr-2 h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: colors.primary.DEFAULT }}
+          />
           <Text className="text-xs font-bold uppercase tracking-widest text-text-secondary-light dark:text-text-secondary-dark">
             {quote.category?.name || 'Quote'}
           </Text>
@@ -42,13 +46,15 @@ export function QuoteCard({
           <MaterialIcons
             name={isFavorited ? 'favorite' : 'favorite-border'}
             size={22}
-            color={isFavorited ? Colors.primary.DEFAULT : Colors.text.secondary.light}
+            color={isFavorited ? colors.primary.DEFAULT : Colors.text.secondary.light}
           />
         </TouchableOpacity>
       </View>
 
       {/* Quote Content */}
-      <Text className="mb-4 font-serif text-2xl leading-relaxed text-text-primary-light dark:text-text-primary-dark">
+      <Text
+        className="mb-4 font-serif leading-relaxed text-text-primary-light dark:text-text-primary-dark"
+        style={{ fontSize, lineHeight: fontSize * 1.5 }}>
         {quote.content}
       </Text>
 

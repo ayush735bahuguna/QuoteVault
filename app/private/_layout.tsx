@@ -3,7 +3,7 @@ import { useSettings } from '@/src/context';
 import { Colors } from '@/src/constants';
 
 export default function PrivateLayout() {
-  const { isDark } = useSettings();
+  const { isDark, currentTheme } = useSettings();
   const bgColor = isDark ? Colors.background.dark : Colors.background.light;
   return (
     <Stack
@@ -28,6 +28,10 @@ export default function PrivateLayout() {
           headerShown: true,
           headerTitle: 'Settings',
           headerStyle: { backgroundColor: bgColor },
+          headerTintColor: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
+          headerTitleStyle: {
+            color: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
+          },
           headerShadowVisible: false,
         }}
       />
@@ -39,6 +43,7 @@ export default function PrivateLayout() {
           headerShown: true,
           headerTitle: '',
           headerStyle: { backgroundColor: bgColor },
+          headerTintColor: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
           headerShadowVisible: false,
         }}
       />
@@ -50,6 +55,10 @@ export default function PrivateLayout() {
           headerShown: true,
           headerTitle: '',
           headerStyle: { backgroundColor: bgColor },
+          headerTintColor: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
+          headerTitleStyle: {
+            color: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
+          },
           headerShadowVisible: false,
         }}
       />
@@ -62,6 +71,7 @@ export default function PrivateLayout() {
           headerShown: true,
           headerTitle: '',
           headerStyle: { backgroundColor: bgColor },
+          headerTintColor: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
           headerShadowVisible: false,
         }}
       />

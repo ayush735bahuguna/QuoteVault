@@ -1,9 +1,8 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-// import { ActivityIndicator, View } from 'react-native';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,17 +22,17 @@ const queryClient = new QueryClient({
 
 const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
-  key: 'QUOTE_VAULT_CACHE_v1', // Buster to invalidate old cache
+  key: 'QUOTE_VAULT_CACHE_v1',
 });
 
 import { AuthProvider, useAuth } from '@/src/context/AuthContext';
 import { SettingsProvider, useSettings } from '@/src/context/SettingsContext';
 import { registerForPushNotificationsAsync } from '@/src/utils/notifications';
 import { ActivityIndicator, View } from 'react-native';
+import { Colors } from '@/src/constants';
 
-// import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isPasswordReset } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -42,14 +41,18 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
     const inAuthGroup = segments[0] === 'auth';
 
-    if (!isAuthenticated && !inAuthGroup) {
+    if (isPasswordReset) {
+      if (segments[1] !== 'reset-password') {
+        router.replace('/auth/reset-password');
+      }
+    } else if (!isAuthenticated && !inAuthGroup) {
       // Redirect to login if not authenticated
       router.replace('/auth/login');
     } else if (isAuthenticated && inAuthGroup) {
       // Redirect to home if authenticated
       router.replace('/private/(tabs)');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, isPasswordReset]);
 
   if (isLoading) {
     return (
@@ -63,23 +66,39 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 }
 
 function RootLayoutNav() {
+  const { isDark, colors } = useSettings();
+
+  const navTheme = {
+    dark: isDark,
+    colors: {
+      primary: colors.primary.DEFAULT,
+      background: isDark ? Colors.background.dark : Colors.background.light,
+      card: isDark ? Colors.surface.dark : Colors.surface.light,
+      text: isDark ? Colors.text.primary.dark : Colors.text.primary.light,
+      border: isDark ? Colors.border.dark : Colors.border.light,
+      notification: colors.primary.DEFAULT,
+    },
+    fonts: DefaultTheme.fonts,
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      <AuthGate>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="private" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </AuthGate>
-    </View>
+    <ThemeProvider value={navTheme}>
+      <View style={{ flex: 1 }}>
+        <AuthGate>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="auth" />
+            <Stack.Screen name="private" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </AuthGate>
+      </View>
+    </ThemeProvider>
   );
 }
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    ...FontAwesome.font,
   });
 
   useEffect(() => {

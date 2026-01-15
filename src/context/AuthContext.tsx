@@ -1,5 +1,6 @@
 import { User } from '@supabase/supabase-js';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { AppState, Linking } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { AuthState, Profile } from '../types';
 
@@ -10,6 +11,7 @@ interface AuthContextType extends AuthState {
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
+  isPasswordReset: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,10 +19,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthState['user']>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // Handle deep links
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) {
+          handleDeepLink(initialUrl);
+        }
+
         const {
           data: { session },
           error,
@@ -40,10 +49,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
+    // Listen for deep links while app is open
+    const linkingSubscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsPasswordReset(true);
+      } else if (event === 'SIGNED_OUT') {
+        setIsPasswordReset(false);
+        setUser(null);
+      }
+
       if (session?.user) {
         await fetchProfile(session.user);
       } else {
@@ -52,8 +73,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      linkingSubscription.remove();
+    };
   }, []);
+
+  const handleDeepLink = async (url: string) => {
+    // Parse the URL to see if it contains auth tokens
+    // Supabase magic links usually look like: scheme://hostname#access_token=...&refresh_token=...&type=recovery
+    try {
+      // If the URL contains access_token and refresh_token (fragment), we can set the session
+      if (url.includes('access_token') && url.includes('refresh_token')) {
+        const fragment = url.split('#')[1];
+        if (fragment) {
+          const params = new URLSearchParams(fragment);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          const type = params.get('type');
+
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (!error && type === 'recovery') {
+              setIsPasswordReset(true);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Error handling deep link:', e);
+    }
+  };
 
   const fetchProfile = async (authUser: User) => {
     try {
@@ -148,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    setIsPasswordReset(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -193,6 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        isPasswordReset,
         signUp,
         signIn,
         signOut,

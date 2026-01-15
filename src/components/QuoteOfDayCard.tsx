@@ -1,12 +1,15 @@
 import { Strings } from '@/src/constants';
+import { useSettings } from '@/src/context'; // Add import
 import { Quote } from '@/src/types';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient'; // Add import
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
 export function QuoteOfDayCard({ quote }: { quote: Quote | null }) {
   const router = useRouter();
+  const { colors, currentTheme } = useSettings(); // Use context
 
   if (!quote) return null;
 
@@ -19,10 +22,20 @@ export function QuoteOfDayCard({ quote }: { quote: Quote | null }) {
       activeOpacity={0.95}
       onPress={() => router.push(`/private/quote?id=${quote.id}`)}
       className="mx-6 mb-6 overflow-hidden rounded-2xl shadow-lg">
-      <View className="relative min-h-80 bg-primary">
-        {/* Gradient Overlay */}
-        <View className="absolute inset-0 bg-gradient-to-br from-orange-400 via-primary to-orange-900/90 opacity-90" />
-        <View className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+      <View className="relative min-h-80" style={{ backgroundColor: colors.primary.DEFAULT }}>
+        {/* Gradient Overlay using Theme Gradient */}
+        <LinearGradient
+          colors={currentTheme.gradient as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, opacity: 0.9 }}
+        />
+        <LinearGradient
+          colors={['rgba(0,0,0,0.4)', 'transparent']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0 }}
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}
+        />
 
         {/* Content */}
         <View className="flex-1 justify-between p-6 pt-8">

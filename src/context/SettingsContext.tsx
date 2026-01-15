@@ -1,8 +1,9 @@
 import { supabase } from '@/src/lib/supabase';
 import { useAuth } from './AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { useColorScheme as useRNColorScheme } from 'react-native';
 import { Colors, Themes } from '../constants';
 import { cancelNotifications, scheduleDailyReminder } from '../utils/notifications';
 import { FontSize, Settings, ThemeMode, ThemeName } from '../types';
@@ -12,6 +13,7 @@ interface SettingsContextType {
   isDark: boolean;
   currentTheme: typeof Themes.goldenHour;
   colors: typeof Colors;
+
   setThemeMode: (mode: ThemeMode) => void;
   setThemeName: (name: ThemeName) => void;
   setFontSize: (size: FontSize) => void;
@@ -34,7 +36,8 @@ const SETTINGS_KEY = '@quotevault_settings';
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const systemColorScheme = useColorScheme();
+  const systemColorScheme = useRNColorScheme();
+  const { setColorScheme } = useNativeWindColorScheme();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -121,6 +124,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     settings.themeMode === 'dark' ||
     (settings.themeMode === 'system' && systemColorScheme === 'dark');
 
+  // Sync with NativeWind
+  useEffect(() => {
+    setColorScheme(isDark ? 'dark' : 'light');
+  }, [isDark, setColorScheme]);
+
   // Get current theme config
   const currentTheme = Themes[settings.themeName];
 
@@ -182,8 +190,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           primary: {
             ...Colors.primary,
             DEFAULT: currentTheme.primary,
-            // We could logic-darken/lighten these if we wanted, but for now just using the main one
-            // or we could add specific light/dark variants to the Themes object
           },
         },
         setThemeMode,

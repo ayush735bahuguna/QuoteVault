@@ -65,6 +65,7 @@ module.exports = {
           light: '#FFFFFF',
           dark: '#2C2420',
         },
+        danger: '#C62828',
       },
       fontFamily: {
         display: ['Manrope', 'sans-serif'],

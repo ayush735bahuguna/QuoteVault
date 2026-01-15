@@ -6,6 +6,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -48,30 +50,29 @@ export async function scheduleDailyReminder(timeString: string) {
       return;
     }
 
-    // Cancel all existing notifications first to avoid duplicates
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    // Parse time string "HH:MM"
     const [hours, minutes] = timeString.split(':').map(Number);
     if (isNaN(hours) || isNaN(minutes)) {
       console.log('Invalid time string for notification:', timeString);
       return;
     }
 
-    // Schedule new notification
+    const trigger: any = {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
+      hour: hours,
+      minute: minutes,
+    };
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: 'Quote of the Day',
         body: 'Your daily dose of inspiration is ready!',
         data: { url: '/private/(tabs)' },
-      },
-      trigger: {
-        hour: hours,
-        minute: minutes,
-        repeats: true,
-      },
+        channelId: 'daily-quotes',
+      } as any,
+      trigger,
     });
-    console.log(`Notification scheduled for ${hours}:${minutes}`);
   } catch (error) {
     console.error('Error scheduling notification:', error);
   }
