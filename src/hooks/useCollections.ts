@@ -15,13 +15,19 @@ export const useCollections = () => {
 
       const { data, error } = await supabase
         .from('collections')
-        .select('*')
+        .select('*, collection_items(count)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      return data as Collection[];
+      // Map the response to include quote_count
+      const collections = data.map((item: any) => ({
+        ...item,
+        quote_count: item.collection_items?.[0]?.count || 0,
+      }));
+
+      return collections as Collection[];
     },
     enabled: !!user?.id,
   });
@@ -44,7 +50,11 @@ export const useCollections = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (newCollection) => {
+      queryClient.setQueryData<Collection[]>(['collections', user?.id], (old) => {
+        const itemWithCount = { ...newCollection, quote_count: 0 } as Collection;
+        return [itemWithCount, ...(old || [])];
+      });
       queryClient.invalidateQueries({ queryKey: ['collections', user?.id] });
     },
   });

@@ -19,13 +19,7 @@ export default function PrivateLayout() {
           animation: 'slide_from_right',
         }}
       />
-      <Stack.Screen
-        name="collection"
-        options={{
-          presentation: 'card',
-          animation: 'slide_from_right',
-        }}
-      />
+
       <Stack.Screen
         name="settings"
         options={{
@@ -39,6 +33,17 @@ export default function PrivateLayout() {
       />
       <Stack.Screen
         name="customize"
+        options={{
+          presentation: 'modal',
+          animation: 'slide_from_bottom',
+          headerShown: true,
+          headerTitle: '',
+          headerStyle: { backgroundColor: bgColor },
+          headerShadowVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="collection"
         options={{
           presentation: 'modal',
           animation: 'slide_from_bottom',

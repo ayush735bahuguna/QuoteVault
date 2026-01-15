@@ -1,9 +1,11 @@
-import * as Clipboard from 'expo-clipboard';
+import { AddToCollectionModal } from '@/src/components/AddToCollectionModal';
 import { Colors, Strings } from '@/src/constants';
 import { useSettings } from '@/src/context';
 import { useFavorites } from '@/src/hooks/useFavorites';
 import { useQuote } from '@/src/hooks/useQuote';
+import { supabase } from '@/src/lib/supabase';
 import { MaterialIcons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
@@ -22,12 +24,14 @@ const { width } = Dimensions.get('window');
 export default function QuoteDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isDark, getFontSizeValue } = useSettings(); // Assuming getFontSizeValue returns a number
+  const { isDark, getFontSizeValue } = useSettings();
   const insets = useSafeAreaInsets();
 
   const { data: quote, isLoading, error } = useQuote(id || '');
   const { favoriteIds, toggleFavorite } = useFavorites();
   const isFavorited = quote ? favoriteIds.has(quote.id) : false;
+
+  const [isCollectionModalVisible, setIsCollectionModalVisible] = React.useState(false);
 
   const handleCopy = async () => {
     if (quote) {
@@ -38,6 +42,34 @@ export default function QuoteDetailScreen() {
   const handleFavorite = async () => {
     if (quote) {
       await toggleFavorite(quote.id);
+    }
+  };
+
+  const handleAssignToCollection = async (collectionId: string) => {
+    // Check for duplicate
+    const { data: existing } = await supabase
+      .from('collection_items')
+      .select('id')
+      .eq('collection_id', collectionId)
+      .eq('quote_id', id)
+      .single();
+
+    if (existing) {
+      alert('This quote is already in the collection');
+      return;
+    }
+
+    const { error } = await supabase.from('collection_items').insert({
+      collection_id: collectionId,
+      quote_id: id,
+    });
+
+    if (error) {
+      console.error('Failed to add to collection', error);
+      alert('Failed to add quote to collection');
+    } else {
+      alert('Quote added to collection!');
+      setIsCollectionModalVisible(false);
     }
   };
 
@@ -70,7 +102,7 @@ export default function QuoteDetailScreen() {
     : [Colors.background.light, '#FDF6E3', '#FFF9F0'];
 
   // Dynamic font sizing - responsive to screen width
-  const baseFontSize = getFontSizeValue() + 8;
+  const baseFontSize = (getFontSizeValue ? getFontSizeValue() : 16) + 8;
   const responsiveFontSize = Math.min(baseFontSize, width * 0.08); // Cap at 8% of screen width
 
   return (
@@ -153,7 +185,19 @@ export default function QuoteDetailScreen() {
         <View
           className="absolute bottom-10 left-0 right-0 items-center px-6"
           style={{ paddingBottom: insets.bottom }}>
-          <View className="flex-row items-center justify-between gap-6 rounded-2xl border border-white/20 bg-white/80 px-8 py-4 shadow-xl backdrop-blur-xl dark:bg-black/20">
+          <View className="flex-row items-center justify-between gap-4 rounded-2xl border border-white/20 bg-white/80 px-6 py-4 shadow-xl backdrop-blur-xl dark:bg-black/20">
+            {/* Add to Collection */}
+            <TouchableOpacity
+              className="items-center"
+              onPress={() => setIsCollectionModalVisible(true)}>
+              <MaterialIcons name="playlist-add" size={26} color={isDark ? '#E6DACE' : '#3E2723'} />
+              <Text className="mt-1 text-[10px] font-bold text-text-secondary-light dark:text-text-secondary-dark">
+                {Strings.actions.save || 'Save'}
+              </Text>
+            </TouchableOpacity>
+
+            <View className="h-8 w-[1px] bg-white/20" />
+
             <TouchableOpacity className="items-center" onPress={handleCopy}>
               <MaterialIcons name="content-copy" size={26} color={isDark ? '#E6DACE' : '#3E2723'} />
               <Text className="mt-1 text-[10px] font-bold text-text-secondary-light dark:text-text-secondary-dark">
@@ -165,11 +209,9 @@ export default function QuoteDetailScreen() {
 
             <TouchableOpacity
               onPress={() => router.push(`/private/customize?id=${quote.id}`)}
-              className="scale-110 items-center">
-              <View className="-mt-8 mb-1 h-14 w-14 items-center justify-center rounded-full border-4 border-white/10 bg-primary shadow-lg shadow-primary/40">
-                <MaterialIcons name="ios-share" size={26} color="#FFF" />
-              </View>
-              <Text className="text-[10px] font-bold text-text-primary-light dark:text-text-primary-dark">
+              className="items-center">
+              <MaterialIcons name="ios-share" size={26} color={isDark ? '#E6DACE' : '#3E2723'} />
+              <Text className="mt-1 text-[10px] font-bold text-text-primary-light dark:text-text-primary-dark">
                 {Strings.actions.share}
               </Text>
             </TouchableOpacity>
@@ -188,6 +230,12 @@ export default function QuoteDetailScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        <AddToCollectionModal
+          visible={isCollectionModalVisible}
+          onClose={() => setIsCollectionModalVisible(false)}
+          onSelectCollection={handleAssignToCollection}
+        />
       </LinearGradient>
     </View>
   );

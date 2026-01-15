@@ -11,11 +11,13 @@ export function QuoteCard({
   onPress,
   onFavorite,
   isFavorited,
+  onAddToCollection,
 }: {
   quote: Quote;
   onPress: () => void;
   onFavorite: () => void;
   isFavorited: boolean;
+  onAddToCollection?: () => void;
 }) {
   const { isDark } = useSettings();
 
@@ -67,12 +69,15 @@ export function QuoteCard({
           </Text>
         </View>
 
-        <View className="flex-row">
+        <View className="flex-row items-center gap-1">
+          <TouchableOpacity className="p-2" onPress={onAddToCollection}>
+            <MaterialIcons name="playlist-add" size={22} color={Colors.text.secondary.light} />
+          </TouchableOpacity>
           <TouchableOpacity className="p-2" onPress={handleCopy}>
-            <MaterialIcons name="content-copy" size={18} color={Colors.text.secondary.light} />
+            <MaterialIcons name="content-copy" size={20} color={Colors.text.secondary.light} />
           </TouchableOpacity>
           <TouchableOpacity className="p-2">
-            <MaterialIcons name="ios-share" size={18} color={Colors.text.secondary.light} />
+            <MaterialIcons name="ios-share" size={20} color={Colors.text.secondary.light} />
           </TouchableOpacity>
         </View>
       </View>

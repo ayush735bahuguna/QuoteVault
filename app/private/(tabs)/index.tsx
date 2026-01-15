@@ -1,3 +1,4 @@
+import { AddToCollectionModal } from '@/src/components/AddToCollectionModal';
 import { QuoteCard } from '@/src/components/QuoteCard';
 import { QuoteOfDayCard } from '@/src/components/QuoteOfDayCard';
 import { Strings } from '@/src/constants';
@@ -6,6 +7,7 @@ import { useCategories } from '@/src/hooks/useCategories';
 import { useDailyQuote } from '@/src/hooks/useDailyQuote';
 import { useFavorites } from '@/src/hooks/useFavorites';
 import { useQuotes } from '@/src/hooks/useQuotes';
+import { supabase } from '@/src/lib/supabase';
 import { MaterialIcons } from '@expo/vector-icons';
 import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -39,6 +41,47 @@ export default function HomeScreen() {
   const { favoriteIds, toggleFavorite } = useFavorites();
   const { data: dailyQuote } = useDailyQuote();
 
+  const [collectionModalVisible, setCollectionModalVisible] = useState(false);
+  const [selectedQuoteToAdd, setSelectedQuoteToAdd] = useState<string | null>(null);
+
+  const handleAddToCollectionPress = (quoteId: string) => {
+    setSelectedQuoteToAdd(quoteId);
+    setCollectionModalVisible(true);
+  };
+
+  const handleAssignToCollection = async (collectionId: string) => {
+    if (!selectedQuoteToAdd) return;
+
+    // Check for duplicate
+    const { data: existing } = await supabase
+      .from('collection_items')
+      .select('id')
+      .eq('collection_id', collectionId)
+      .eq('quote_id', selectedQuoteToAdd)
+      .single();
+
+    if (existing) {
+      alert('This quote is already in the collection');
+      return;
+    }
+
+    // In a real app, you might want a custom hook for this mutation
+    // For now, direct supabase call is fine
+    const { error } = await supabase.from('collection_items').insert({
+      collection_id: collectionId,
+      quote_id: selectedQuoteToAdd,
+    });
+
+    if (error) {
+      // Ideally show toast
+      console.error('Failed to add to collection', error);
+    } else {
+      // Show success
+      setCollectionModalVisible(false);
+      alert('Quote added to collection!');
+    }
+  };
+
   const handleFavorite = async (quoteId: string) => {
     try {
       await toggleFavorite(quoteId);
@@ -46,6 +89,20 @@ export default function HomeScreen() {
       console.error('Failed to toggle favorite', error);
     }
   };
+
+  const onSelectHandler = (cat: string | null) => {
+    setSelectedCategory(cat);
+  };
+
+  // const renderCategoryPills = useMemo(() => {
+  //   return (
+  //     <CategoryPills
+  //       categories={categories || []}
+  //       selectedCategory={selectedCategory}
+  //       onSelect={onSelectHandler}
+  //     />
+  //   );
+  // }, [categories, selectedCategory, onSelectHandler]);
 
   return (
     <View className="flex-1 bg-background-light dark:bg-background-dark">
@@ -61,6 +118,7 @@ export default function HomeScreen() {
                 onPress={() => router.push(`/private/quote?id=${item.id}`)}
                 onFavorite={() => handleFavorite(item.id)}
                 isFavorited={favoriteIds.has(item.id)}
+                onAddToCollection={() => handleAddToCollectionPress(item.id)}
               />
             </View>
           )}
@@ -78,7 +136,9 @@ export default function HomeScreen() {
 
               <Text className="mx-6 mb-2 mt-4 text-xl font-semibold">Quotes feed</Text>
 
-              <View className="h-2" />
+              {/* <View className="h-2" />
+              {renderCategoryPills}
+              <View className="h-4" /> */}
             </>
           }
           ListFooterComponent={
