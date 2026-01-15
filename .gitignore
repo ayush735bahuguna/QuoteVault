@@ -10,6 +10,17 @@ web-build/
 .env*
 # Native
 *.orig.*
+
+# Android
+android/build/
+android/.gradle/
+android/.kotlin/
+android/app/build/
+modules/**/android/build/
+
+# iOS
+ios/build/
+ios/Pods/
 *.jks
 *.p8
 *.p12

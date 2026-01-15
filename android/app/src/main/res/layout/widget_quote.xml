@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="@drawable/widget_background">
+
+    <TextView
+        android:id="@+id/widget_quote_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start your day with inspiration"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="italic"
+        android:gravity="center"
+        android:maxLines="4"
+        android:ellipsize="end"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/widget_author_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="— QuoteVault"
+        android:textColor="#FFFFFFCC"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:gravity="center" />
+
+</LinearLayout>
