@@ -146,7 +146,6 @@ export default function CustomizeScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to save image');
-      console.error(error);
     }
   };
 
@@ -163,7 +162,7 @@ export default function CustomizeScreen() {
         message: `"${quote.content}" - ${quote.author}\n\nShared via QuoteVault`,
       });
     } catch (error) {
-      console.error(error);
+      // Share failed
     }
   };
 
@@ -357,7 +356,7 @@ export default function CustomizeScreen() {
                         />
                       ) : theme.type === 'gradient' ? (
                         <LinearGradient
-                          colors={theme.colors}
+                          colors={theme.colors || ['#FFFFFF', '#000000']}
                           className="flex-1"
                           start={{ x: 0, y: 0 }}
                           end={{ x: 1, y: 1 }}

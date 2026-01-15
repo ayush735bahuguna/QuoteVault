@@ -46,7 +46,6 @@ export async function scheduleDailyReminder(timeString: string) {
     // Ensure permissions
     const hasPermission = await registerForPushNotificationsAsync();
     if (!hasPermission) {
-      console.log('Cannot schedule notification: No permission.');
       return;
     }
 
@@ -54,7 +53,6 @@ export async function scheduleDailyReminder(timeString: string) {
 
     const [hours, minutes] = timeString.split(':').map(Number);
     if (isNaN(hours) || isNaN(minutes)) {
-      console.log('Invalid time string for notification:', timeString);
       return;
     }
 
@@ -74,7 +72,7 @@ export async function scheduleDailyReminder(timeString: string) {
       trigger,
     });
   } catch (error) {
-    console.error('Error scheduling notification:', error);
+    // Notification scheduling error handled silently
   }
 }
 

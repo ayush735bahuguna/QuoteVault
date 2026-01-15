@@ -73,7 +73,6 @@ export default function addQuote() {
         },
       ]);
     } catch (error) {
-      console.error('Error adding quote:', error);
       Alert.alert(Strings.addQuote.errorTitle, Strings.errors.genericError);
     } finally {
       setIsSubmitting(false);

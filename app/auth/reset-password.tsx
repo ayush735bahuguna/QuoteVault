@@ -47,21 +47,23 @@ export default function ResetPasswordScreen() {
         password: password.trim(),
       });
 
+      setIsLoading(false);
+
       if (error) throw error;
 
       Alert.alert('Success', 'Your password has been updated', [
         {
           text: 'OK',
-          onPress: async () => {
-            // After changing password, we might want to ensure they are logged in or clean state
-            router.replace('/private/(tabs)');
+          onPress: () => {
+            // Sign out to clear the recovery session, then redirect to login
+            signOut();
+            router.replace('/auth/login');
           },
         },
       ]);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update password');
-    } finally {
       setIsLoading(false);
+      Alert.alert('Error', error.message || 'Failed to update password');
     }
   };
 
@@ -115,7 +117,7 @@ export default function ResetPasswordScreen() {
 
           {/* Confirm Password Input */}
           <View>
-            <Text className="mb-2 ml-1 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
+            <Text className="my-2 ml-1 text-sm font-medium text-text-secondary-light dark:text-text-secondary-dark">
               Confirm Password
             </Text>
             <View className="flex-row items-center rounded-xl border border-border-light bg-surface-light px-4 py-3 dark:border-border-dark dark:bg-surface-dark">

@@ -34,7 +34,7 @@ export function CreateCollectionModal({ visible, onClose, onSubmit }: CreateColl
       setDescription('');
       onClose();
     } catch (error) {
-      console.error('Error creating collection:', error);
+      // Error creating collection
     } finally {
       setIsSubmitting(false);
     }

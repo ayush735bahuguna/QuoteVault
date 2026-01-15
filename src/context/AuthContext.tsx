@@ -42,7 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         setIsLoading(false);
       }
     };
@@ -81,31 +80,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleDeepLink = async (url: string) => {
     // Parse the URL to see if it contains auth tokens
-    // Supabase magic links usually look like: scheme://hostname#access_token=...&refresh_token=...&type=recovery
+    // Supabase recovery links can use either fragment (#) or query params (?)
     try {
-      // If the URL contains access_token and refresh_token (fragment), we can set the session
-      if (url.includes('access_token') && url.includes('refresh_token')) {
-        const fragment = url.split('#')[1];
-        if (fragment) {
-          const params = new URLSearchParams(fragment);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-          const type = params.get('type');
+      let tokenString = '';
 
-          if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
+      // Check for fragment first (most common for Supabase)
+      if (url.includes('#')) {
+        tokenString = url.split('#')[1] || '';
+      }
+      // Also check query params (some Supabase configs use this)
+      else if (url.includes('?')) {
+        tokenString = url.split('?')[1] || '';
+      }
+
+      if (tokenString && tokenString.includes('access_token')) {
+        const params = new URLSearchParams(tokenString);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+
+        if (accessToken && refreshToken) {
+          // Set password reset flag FIRST before async call
+          if (type === 'recovery') {
+            setIsPasswordReset(true);
+          }
+
+          try {
+            await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
-
-            if (!error && type === 'recovery') {
-              setIsPasswordReset(true);
-            }
+          } catch (sessionError) {
+            // Session error handled silently
           }
         }
       }
     } catch (e) {
-      console.log('Error handling deep link:', e);
+      // Deep link error handled silently
     }
   };
 
@@ -135,13 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select()
           .single();
 
-        if (createError) {
-          console.error('Error creating missing profile:', createError);
-        } else {
+        if (!createError) {
           fetchedProfile = newProfile;
         }
-      } else if (error) {
-        console.error('Error fetching profile:', error);
       }
 
       setUser({
@@ -150,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile: fetchedProfile || undefined,
       });
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      // Profile fetch error handled silently
     } finally {
       setIsLoading(false);
     }
@@ -175,10 +182,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           notification_time: '09:00',
           notifications_enabled: true,
         });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-        }
       }
 
       return { error: null };
@@ -207,7 +210,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'QuoteVault://auth/callback',
+      });
       return { error };
     } catch (error) {
       return { error: error as Error };

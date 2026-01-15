@@ -40,7 +40,7 @@ export default function SearchScreen() {
     try {
       await toggleFavorite(quoteId);
     } catch (error) {
-      console.error('Failed to toggle favorite', error);
+      // Failed to toggle favorite
     }
   };
 

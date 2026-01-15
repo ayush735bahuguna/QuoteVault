@@ -11,7 +11,6 @@ export function getHslString(hex: string): string {
     const hue = isNaN(h) ? 0 : h;
     return `${hue} ${s * 100}% ${l * 100}%`;
   } catch (e) {
-    console.error('Failed to convert hex to HSL:', hex, e);
     return '0 0% 0%';
   }
 }

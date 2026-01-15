@@ -1,4 +1,4 @@
-# QuoteVault - Golden Hour
+# QuoteVault
 
 A premium, daily quote application built with React Native (Expo) and Supabase.
 

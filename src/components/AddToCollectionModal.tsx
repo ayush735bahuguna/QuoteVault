@@ -36,7 +36,7 @@ export function AddToCollectionModal({
       await onSelectCollection(id);
       onClose();
     } catch (error) {
-      console.error('Error adding to collection:', error);
+      // Error adding to collection
     } finally {
       setLoadingId(null);
     }
@@ -51,7 +51,7 @@ export function AddToCollectionModal({
         // Main modal will be closed by handleSelect
       }
     } catch (error) {
-      console.error('Failed to create collection', error);
+      // Failed to create collection
     }
   };
 

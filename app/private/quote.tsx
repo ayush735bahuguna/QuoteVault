@@ -65,7 +65,6 @@ export default function QuoteDetailScreen() {
     });
 
     if (error) {
-      console.error('Failed to add to collection', error);
       alert('Failed to add quote to collection');
     } else {
       alert('Quote added to collection!');

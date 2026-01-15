@@ -87,7 +87,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      // Failed to load settings
     } finally {
       setIsLoaded(true);
     }
@@ -111,11 +111,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
 
         if (error) {
-          console.error('Error syncing settings to Supabase:', error);
+          // Failed to sync settings to Supabase
         }
       }
     } catch (error) {
-      console.error('Error saving settings:', error);
+      // Failed to save settings
     }
   };
 

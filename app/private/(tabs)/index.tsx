@@ -24,7 +24,6 @@ export default function HomeScreen() {
   useEffect(() => {
     if (category) {
       setSelectedCategory(category);
-      console.log(category);
     }
   }, [category]);
 
@@ -65,18 +64,14 @@ export default function HomeScreen() {
       return;
     }
 
-    // In a real app, you might want a custom hook for this mutation
-    // For now, direct supabase call is fine
     const { error } = await supabase.from('collection_items').insert({
       collection_id: collectionId,
       quote_id: selectedQuoteToAdd,
     });
 
     if (error) {
-      // Ideally show toast
-      console.error('Failed to add to collection', error);
+      alert('Failed to add to collection');
     } else {
-      // Show success
       setCollectionModalVisible(false);
       alert('Quote added to collection!');
     }
@@ -86,7 +81,7 @@ export default function HomeScreen() {
     try {
       await toggleFavorite(quoteId);
     } catch (error) {
-      console.error('Failed to toggle favorite', error);
+      // Favorite toggle error handled silently
     }
   };
 
