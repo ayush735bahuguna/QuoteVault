@@ -2,6 +2,7 @@ import { supabase } from '@/src/lib/supabase';
 import { Quote } from '@/src/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery } from '@tanstack/react-query';
+import { updateWidget } from '../utils/widgetBridge';
 
 const DAILY_QUOTE_KEY = '@quotevault_daily_quote';
 const DAILY_QUOTE_DATE_KEY = '@quotevault_daily_quote_date';
@@ -17,7 +18,10 @@ export const useDailyQuote = () => {
       const cachedQuoteStr = await AsyncStorage.getItem(DAILY_QUOTE_KEY);
 
       if (cachedDate === today && cachedQuoteStr) {
-        return JSON.parse(cachedQuoteStr) as Quote;
+        const cachedQuote = JSON.parse(cachedQuoteStr) as Quote;
+        // Update widget with cached quote
+        updateWidget(cachedQuote.content, cachedQuote.author);
+        return cachedQuote;
       }
 
       // 2. Fetch new random quote from Supabase
@@ -38,6 +42,9 @@ export const useDailyQuote = () => {
       // 3. Cache it
       await AsyncStorage.setItem(DAILY_QUOTE_KEY, JSON.stringify(newDailyQuote));
       await AsyncStorage.setItem(DAILY_QUOTE_DATE_KEY, today);
+
+      // Update widget with new quote
+      updateWidget(newDailyQuote.content, newDailyQuote.author);
 
       return newDailyQuote as Quote;
     },

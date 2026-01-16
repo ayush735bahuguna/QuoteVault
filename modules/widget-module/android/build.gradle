@@ -6,12 +6,12 @@ group = 'expo.modules.widget'
 version = '1.0.0'
 
 android {
-    namespace "expo.modules.widget"
-    compileSdk 36
+    namespace = "expo.modules.widget"
+    compileSdk = 36
 
     defaultConfig {
-        minSdk 24
-        targetSdk 36
+        minSdk = 24
+        targetSdk = 36
     }
 
     compileOptions {
